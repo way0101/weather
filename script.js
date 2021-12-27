@@ -1,4 +1,6 @@
 let news = []
+let page = 1;
+let total_page = 0;
 let menuBtn = document.querySelectorAll(".menu-btn")
 menuBtn.forEach((menu)=> menu.addEventListener("click", (e) =>getNewsByTopic(e)))
 
@@ -12,16 +14,21 @@ console.log(searchBtn)
 const getNews = async() => {
     try{
         let header = new Headers({'x-api-key':'HczDzcDhY32VygHq3U67QzUBcCIS8qz4xEzIDLj5smY'})
+        url.searchParams.set('page', page)
+        console.log(url)
         let response = await fetch(url,{headers:header});
         let data = await response.json()
         if(response.status === 200){
             if(data.total_hits === 0){
                 throw new Error("검색된 결과 값이 없습니다.")
             }
+            console.log("받는 데이터가 뭐지 ?", data)
             news = data.articles
+            total_page = data.total_page
+            page = data.page
             console.log(news)
             render()
-
+            pagenation()
         }else{
             throw new Error(data.message)
         }
@@ -89,6 +96,39 @@ const errorRender = (message) =>{
     document.querySelector('#news-board').innerHTML = errorHTML
 }
 
+
+const pagenation = () => {
+    let pagenationHTML =`<li class="page-item disabled">
+    <a class="page-link" onclick="moveToPage(${page -1})")>Previous</a>
+  </li>`;
+    //total_page
+    //page
+    //page group
+    let pageGroup = Math.ceil(page/5)
+    //last
+    let last = pageGroup*5
+    //first
+    let first = last - 4
+    //first~last 페이지 프린트
+
+    for(let i=first; i<=last; i++){
+        pagenationHTML += 
+        `<li class="page-item ${page ===i?"active":""}"><a class="page-link" href="#" onclick="moveToPage(${i})">${i}</a></li>`
+    }
+
+    pagenationHTML += `<li class="page-item">
+    <a class="page-link" href="#" onclick="moveToPage(${page + 1})">Next</a>
+    </li>`
+    document.querySelector(".pagination").innerHTML = pagenationHTML
+
+}
+
+const moveToPage = (pageNum) =>{
+    //1. 이동하고 싶은 페이지를 알아야지
+    page = pageNum
+    //2. 이동하고 싶은 페이지를 가지고 api호출해야지
+    getNews()
+}
 
 
 searchBtn.addEventListener("click", getNewsByKeyword)
